@@ -1,17 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? get _auth => Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null;
 
   // Obtener el usuario actual de forma directa
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _auth?.currentUser;
 
   // Modificación: Registro + Envío automático de correo de verificación
-  Future<UserCredential> registerWithEmailAndPassword({
+  Future<UserCredential?> registerWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
-    UserCredential credential = await _auth.createUserWithEmailAndPassword(
+    if (_auth == null) {
+      throw FirebaseAuthException(code: 'network-request-failed', message: 'Sin conexión a Firebase');
+    }
+    UserCredential credential = await _auth!.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
@@ -21,25 +25,30 @@ class AuthService {
     return credential;
   }
 
-  Future<UserCredential> signInWithEmailAndPassword({
+  Future<UserCredential?> signInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
-    return _auth.signInWithEmailAndPassword(
+    if (_auth == null) {
+      throw FirebaseAuthException(code: 'network-request-failed', message: 'Sin conexión a Firebase');
+    }
+    return _auth!.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    if (_auth != null) {
+      await _auth!.signOut();
+    }
   }
 
-  // NUEVO: Comprobación estricta de verificación de correo electrónico
+  // Comprobación estricta de verificación de correo electrónico
   bool isEmailVerified() {
-    final user = _auth.currentUser;
+    if (_auth == null) return false;
+    final user = _auth!.currentUser;
     if (user != null) {
-      // Forzar recarga del estado del usuario para obtener cambios de verificación recientes
       user.reload();
       return user.emailVerified;
     }
@@ -74,5 +83,4 @@ class AuthService {
         return 'Ocurrió un error al autenticar. Intenta de nuevo.';
     }
   }
-
-} 
+}
