@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,37 +9,44 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class NotificationService {
-  static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  static FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
 
   static Future<void> initialize() async {
-    // 1. Manejo en background
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    if (_fcm == null) return;
+    try {
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // 2. Solicitar permisos de notificación en el dispositivo
-    NotificationSettings settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+      NotificationSettings settings = await _fcm!.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('Permisos de notificaciones concedidos.');
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('Permisos de notificaciones concedidos.');
+      }
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Notificación en primer plano: ${message.notification?.title}');
+      });
+    } catch (e) {
+      debugPrint('No se pudo inicializar las notificaciones de Firebase: $e');
     }
-
-    // 3. Listener en primer plano (foreground)
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Notificación en primer plano: ${message.notification?.title}');
-    });
   }
 
   // Activar o desactivar suscripciones a los temas de recordatorios
   static Future<void> toggleNotifications(bool enabled) async {
-    if (enabled) {
-      await _fcm.subscribeToTopic('daily_reminders');
-      debugPrint('Suscrito exitosamente a los recordatorios diarios.');
-    } else {
-      await _fcm.unsubscribeFromTopic('daily_reminders');
-      debugPrint('Desuscrito de los recordatorios diarios.');
+    if (_fcm == null) return;
+    try {
+      if (enabled) {
+        await _fcm!.subscribeToTopic('daily_reminders');
+        debugPrint('Suscrito exitosamente a los recordatorios diarios.');
+      } else {
+        await _fcm!.unsubscribeFromTopic('daily_reminders');
+        debugPrint('Desuscrito de los recordatorios diarios.');
+      }
+    } catch (e) {
+      debugPrint('Error al cambiar notificaciones: $e');
     }
   }
 }

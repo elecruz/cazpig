@@ -12,26 +12,26 @@ void main() async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 4));
+    ).timeout(const Duration(seconds: 3));
 
-    // Activar persistencia sin conexión de Firestore
-    try {
-      FirebaseFirestore.instance.settings = const Settings(
-        persistenceEnabled: true,
-        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-      );
-    } catch (e) {
-      debugPrint("Configuración de caché Firestore omitida: $e");
-    }
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      } catch (e) {
+        debugPrint("Configuración de caché Firestore omitida: $e");
+      }
 
-    // Inicializar FCM solo si Firebase encendió correctamente
-    try {
-      await NotificationService.initialize();
-    } catch (e) {
-      debugPrint("Notificaciones no soportadas en este entorno: $e");
+      try {
+        await NotificationService.initialize();
+      } catch (e) {
+        debugPrint("Notificaciones no soportadas en este entorno: $e");
+      }
     }
   } catch (e) {
-    debugPrint("Firebase omitido o no compatible en esta plataforma: $e");
+    debugPrint("Firebase omitido o no compatible en este entorno: $e");
   }
 
   runApp(const CazadoresApp());
