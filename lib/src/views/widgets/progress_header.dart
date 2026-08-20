@@ -1,0 +1,241 @@
+import 'package:flutter/material.dart';
+import '../../controllers/user_controller.dart';
+
+class ProgressHeader extends StatelessWidget implements PreferredSizeWidget {
+  const ProgressHeader({super.key});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(68.0);
+
+  @override
+  Widget build(BuildContext context) {
+    final userController = UserController();
+
+    return ListenableBuilder(
+      listenable: userController,
+      builder: (context, child) {
+        final user = userController.currentUser;
+
+        return Container(
+          width: double.infinity,
+          height: 68,
+          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: double.infinity,
+            height: 68,
+            child: Stack(
+              children: [
+                // 1. IMAGEN DE FONDO
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/imagenes/barra.png',
+                    fit: BoxFit.fitWidth,
+                  ),
+                ),
+
+                // Indicador flotante de Modo Offline
+                if (user.isOffline)
+                  Positioned(
+                    top: 22,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD97706),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cloud_off_rounded, color: Colors.white, size: 10),
+                          SizedBox(width: 2),
+                          Text(
+                            'OFFLINE',
+                            style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // 2. CAPA DE ICONOS Y TEXTOS CORREGIDA CON BLOQUES FIJOS
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        // Espacio inicial exacto para saltarse el título "RUTA"
+                        const Spacer(flex: 36),
+
+                        // ==================== SECCIÓN VIDAS ====================
+                        Expanded(
+                          flex: 18,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Image.asset(
+                                'assets/imagenes/corazon.png',
+                                height: 30,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(width: 4), // Pegadito al recuadro gris
+                              Expanded(
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    if (user.lives < 100) {
+                                      _mostrarCompraVidas(context, userController);
+                                    }
+                                  },
+                                  child: Center(
+                                    child: Text(
+                                      '${user.lives}',
+                                      style: const TextStyle(
+                                        color: Color(0xFFFFF3E0),
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                        shadows:[
+                                          Shadow(
+                                           color: Colors.black54,
+                                           blurRadius:4,
+                                           offset:Offset(0,1),
+                                          ),
+                                        ],
+
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Spacer(flex: 1), // Separador mínimo entre bloques
+
+                        // ==================== SECCIÓN RACHA ====================
+                        Expanded(
+                          flex: 18,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Image.asset(
+                                'assets/imagenes/horno.png',
+                                height: 30,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(width: 4), // Pegadito al recuadro gris
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    '${user.streak}',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFF3E0),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Spacer(flex: 1), // Separador mínimo entre bloques
+
+                        // ==================== SECCIÓN PIGMENTOS ====================
+                        Expanded(
+                          flex: 22, // Un pelincito más ancho para soportar cifras de 4 dígitos como "1791"
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Image.asset(
+                                'assets/imagenes/cristal.png',
+                                height: 30,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(width: 4), // Pegadito al recuadro gris
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    '${user.pigments}',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFF3E0),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Espacio de salida final a la derecha del pergamino
+                        const Spacer(flex: 4),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _mostrarCompraVidas(BuildContext context, UserController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: const Color(0xFF1E2638),
+        title: const Text(
+          "❤️ Rellenar Vidas",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.favorite_rounded, color: Color(0xFFFF4B4B), size: 70),
+            SizedBox(height: 16),
+            Text(
+              "¿Quieres reponer tus 100 vidas de inmediato?",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Coste: 150 💎",
+              style: TextStyle(color: Color(0xFF1CB0F6), fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.white60)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              bool exito = controller.comprarVidasConPigmentos();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exito ? "¡Vidas recargadas al máximo!" : "No tienes suficientes pigmentos 💎"),
+                  backgroundColor: exito ? Colors.green : Colors.red,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4B4B)),
+            child: const Text("Comprar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+}

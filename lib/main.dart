@@ -1,9 +1,39 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'pantallas/perfil.dart';
-import 'pantallas/nivel.dart';
-import 'pantallas/menu.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'src/views/screens/splash_screen.dart';
+import 'src/services/notification_service.dart';
 
-void main() {
+void main() async { 
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicialización defensiva de Firebase y persistencia local para soporte Offline
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 4));
+
+    // Activar persistencia sin conexión de Firestore
+    try {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      debugPrint("Configuración de caché Firestore omitida: $e");
+    }
+
+    // Inicializar FCM solo si Firebase encendió correctamente
+    try {
+      await NotificationService.initialize();
+    } catch (e) {
+      debugPrint("Notificaciones no soportadas en este entorno: $e");
+    }
+  } catch (e) {
+    debugPrint("Firebase omitido o no compatible en esta plataforma: $e");
+  }
+
   runApp(const CazadoresApp());
 }
 
@@ -12,54 +42,10 @@ class CazadoresApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Cazadores de Pigmentos',
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
-
-  
-  final List<Widget> _paginas = [
-    const PerfilPantalla(),
-    const NivelPantalla(),
-    const MenuPantalla(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cazadores de Pigmentos'),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-      body: _paginas[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-          BottomNavigationBarItem(icon: Icon(Icons.videogame_asset), label: 'Nivel'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Menú'),
-        ],
-      ),
+      home: SplashScreen(), 
     );
   }
 }
