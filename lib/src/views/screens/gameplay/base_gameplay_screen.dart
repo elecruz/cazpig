@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../controllers/user_controller.dart';
-import '../../widgets/game_button.dart';
+import '../../widgets/custom_check_button.dart';
 import '../../widgets/game_bottom_sheet.dart';
 import '../../../controllers/base_level_controller.dart';
 import '../../../controllers/level_generator.dart';
@@ -12,7 +12,7 @@ class BaseGameplayScreen<T extends LevelModel, C extends BaseLevelController<T>>
   final C Function(BuildContext context) controllerFactory;
   final Widget Function(BuildContext context, C controller) gameFieldBuilder;
   final Widget Function(BuildContext context, C controller)? instructionCardBuilder;
-  final bool ocultarBotonComprobar; // <--- NUEVA PROPIEDAD CONTROLADORA
+  final bool ocultarBotonComprobar;
 
   const BaseGameplayScreen({
     super.key,
@@ -20,7 +20,7 @@ class BaseGameplayScreen<T extends LevelModel, C extends BaseLevelController<T>>
     required this.controllerFactory,
     required this.gameFieldBuilder,
     this.instructionCardBuilder,
-    this.ocultarBotonComprobar = false, // Por defecto se muestra para otros niveles
+    this.ocultarBotonComprobar = false,
   });
 
   @override
@@ -92,130 +92,138 @@ class _BaseGameplayScreenState<T extends LevelModel, C extends BaseLevelControll
       builder: (context, child) {
         final datos = _controller.datosNivel;
 
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-         appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            iconTheme: const IconThemeData(
-              color: Color(0xFFFFD580),
-              size: 28,
+        return Stack(
+          children: [
+            // Fondo unificado de juego
+            Positioned.fill(
+              child: Image.asset(
+                'assets/imagenes/pantallajuego.jpeg',
+                fit: BoxFit.cover,
+              ),
             ),
-            title: Text(
-              '${datos.title} - Nivel ${datos.level}',
-              style: const TextStyle(
-                color: Color(0xFFFFE4A3),
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
-                shadows: [
-                  Shadow(
-                    color: Colors.black,
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: const IconThemeData(
+                  color: Color(0xFFFFD580),
+                  size: 28,
+                ),
+                title: Text(
+                  '${datos.title} - Nivel ${datos.level}',
+                  style: const TextStyle(
+                    color: Color(0xFFFFE4A3),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  ListenableBuilder(
+                    listenable: UserController(),
+                    builder: (context, child) {
+                      final user = UserController().currentUser;
+                      return Row(
+                        children: [
+                          const Icon(Icons.favorite_rounded, color: Color(0xFFFF4B4B), size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${user.lives}',
+                            style: const TextStyle(
+                              color: Color(0xFFFFE4A3),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(color: Colors.black, blurRadius: 4),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          const Icon(Icons.diamond_rounded, color: Color(0xFF00C897), size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${user.pigments}',
+                            style: const TextStyle(
+                              color: Color(0xFFFFE4A3),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(color: Colors.black, blurRadius: 4),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Flex(
+                        direction: esPantallaAncha ? Axis.horizontal : Axis.vertical,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          SizedBox(
+                            width: esPantallaAncha ? ancho * 0.45 : double.infinity,
+                            child: widget.instructionCardBuilder != null
+                                ? widget.instructionCardBuilder!(context, _controller)
+                                : _buildDefaultInstructionCard(datos),
+                          ),
+                          const SizedBox(height: 16, width: 16),
+                          SizedBox(
+                            width: esPantallaAncha ? ancho * 0.45 : double.infinity,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFA141C28),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: const Color(0xFF8B5A2B), width: 2),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black87,
+                                    blurRadius: 14,
+                                    spreadRadius: 2,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  widget.gameFieldBuilder(context, _controller),
+                                  if (!widget.ocultarBotonComprobar) ...[
+                                    const SizedBox(height: 16),
+                                    CustomCheckButton(
+                                      habilitado: _controller.listoParaComprobar,
+                                      onPressed: _comprobar,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            actions: [
-              ListenableBuilder(
-                listenable: UserController(),
-                builder: (context, child) {
-                  final user = UserController().currentUser;
-                  return Row(
-                    children: [
-                      // VIDAS
-                      const Icon(Icons.favorite_rounded, color: Color(0xFFFF4B4B), size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${user.lives}',
-                        style: const TextStyle(
-                          color: Color(0xFFFFE4A3),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          shadows: [
-                            Shadow(color: Colors.black, blurRadius: 4),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      // PIGMENTOS
-                      const Icon(Icons.diamond_rounded, color: Color(0xFF00C897), size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${user.pigments}',
-                        style: const TextStyle(
-                          color: Color(0xFFFFE4A3),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          shadows: [
-                            Shadow(color: Colors.black, blurRadius: 4),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Flex(
-                    direction: esPantallaAncha ? Axis.horizontal : Axis.vertical,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      SizedBox(
-                        width: esPantallaAncha ? ancho * 0.45 : double.infinity,
-                        child: widget.instructionCardBuilder != null
-                            ? widget.instructionCardBuilder!(context, _controller)
-                            : _buildDefaultInstructionCard(datos),
-                      ),
-                      const SizedBox(height: 16, width: 16),
-                      SizedBox(
-                        width: esPantallaAncha ? ancho * 0.45 : double.infinity,
-                        child: widget.gameFieldBuilder(context, _controller),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              if (!widget.ocultarBotonComprobar)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  decoration: const BoxDecoration(
-                    color: Color(0xDD141824),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  child: SafeArea(
-                    child: GameButton(
-                      backgroundColor: _controller.listoParaComprobar
-                          ? const Color(0xFF58CC02)
-                          : Colors.grey.shade600,
-                      shadowColor: _controller.listoParaComprobar
-                          ? const Color(0xFF46A302)
-                          : Colors.grey.shade800,
-                      enabled: _controller.listoParaComprobar,
-                      onTap: _comprobar,
-                      child: const Text(
-                        "COMPROBAR",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          ],
         );
       },
     );
@@ -273,9 +281,17 @@ class _BaseGameplayScreenState<T extends LevelModel, C extends BaseLevelControll
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 53, 35, 4),
+        color: const Color(0xFA141C28),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF3F4B62), width: 2),
+        border: Border.all(color: const Color(0xFFFFD580), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black87,
+            blurRadius: 14,
+            spreadRadius: 2,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,10 +299,11 @@ class _BaseGameplayScreenState<T extends LevelModel, C extends BaseLevelControll
           Text(
             title.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFFFF9F1C),
+              color: Color(0xFFFFD580),
               fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 1.0,
+              fontSize: 13,
+              letterSpacing: 1.2,
+              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
             ),
           ),
           if (subtitle.isNotEmpty) ...[
@@ -297,13 +314,20 @@ class _BaseGameplayScreenState<T extends LevelModel, C extends BaseLevelControll
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
+                shadows: [Shadow(color: Colors.black, blurRadius: 4)],
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             datos.instruction,
-            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+            style: const TextStyle(
+              color: Color(0xFFFFE4A3),
+              fontSize: 14,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+              shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+            ),
           ),
         ],
       ),

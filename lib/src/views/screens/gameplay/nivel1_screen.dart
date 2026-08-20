@@ -24,7 +24,6 @@ class Nivel1Screen extends StatelessWidget {
         // Capa interactiva
         BaseGameplayScreen<MixLevelModel, Nivel1Controller>(
           nivel: nivelInicial,
-          ocultarBotonComprobar: true,
           controllerFactory: (context) => Nivel1Controller(nivelInicial: nivelInicial),
           gameFieldBuilder: (context, controller) {
             return Column(
@@ -46,9 +45,6 @@ class Nivel1Screen extends StatelessWidget {
                           color: Color(0xFFFFD580),
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
-                          shadows: [
-                            Shadow(color: Colors.black, blurRadius: 8),
-                          ],
                         ),
                       ),
                     ),
@@ -147,13 +143,13 @@ class Nivel1Screen extends StatelessWidget {
                       onTap: () => controller.seleccionarColor(col),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: 145,
-                        height: 92,
+                        width: 90,
+                        height: 90,
                         decoration: BoxDecoration(
                           color: seleccionado
                               ? const Color(0xF03D2314)
                               : const Color(0xD91E130D),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(18),
                           border: Border.all(
                             color: seleccionado
                                 ? const Color(0xFFFFD580)
@@ -170,52 +166,46 @@ class Nivel1Screen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(8),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black45,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: col, width: 1.5),
-                                  ),
-                                  child: Icon(Icons.science, color: col, size: 18),
-                                ),
-                                Icon(Icons.colorize, color: col.withOpacity(0.8), size: 16),
-                              ],
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: col, width: 1.5),
+                              ),
+                              child: Icon(Icons.science_rounded, color: col, size: 20),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${pigmento.formula}  #${col.value.toRadixString(16).substring(2).toUpperCase()}",
-                                  style: TextStyle(
-                                    color: const Color(0xFFFFE4A3).withOpacity(0.8),
-                                    fontSize: 9,
-                                    fontFamily: 'monospace',
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            const SizedBox(height: 6),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                pigmento.nombre,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  shadows: [
+                                    Shadow(color: Colors.black, blurRadius: 4),
+                                  ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  pigmento.nombre,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
-                                    shadows: [
-                                      Shadow(color: Colors.black, blurRadius: 4),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            )
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "#${col.value.toRadixString(16).substring(2).toUpperCase()}",
+                              style: TextStyle(
+                                color: const Color(0xFFFFE4A3).withOpacity(0.8),
+                                fontSize: 8,
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -240,16 +230,7 @@ class Nivel1Screen extends StatelessWidget {
                     ),
                   )
                 else
-                  const SizedBox(height: 44),
-
-                const SizedBox(height: 6),
-
-                CustomCheckButton(
-                  habilitado: controller.listoParaComprobar,
-                  onPressed: () {
-                    controller.comprobarResultado();
-                  },
-                ),
+                  const SizedBox(height: 16),
               ],
             );
           },
@@ -311,13 +292,6 @@ class Nivel1Screen extends StatelessWidget {
                     : Icons.hourglass_empty_rounded,
                 color: estaLleno ? color : const Color(0xFFFFD580),
                 size: 38,
-                shadows: const [
-                  Shadow(
-                    color: Colors.black,
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
             ],
           ),

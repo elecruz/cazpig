@@ -31,87 +31,84 @@ class Nivel12Screen extends StatelessWidget {
             // SECUENCIA RESULTADO (ORDEN CREADO)
             const Text(
               "SECUENCIA DE ORDENAMIENTO (De desaturado a saturado):",
-              style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFFFFE4A3), fontSize: 12, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(datosNivel.sequence.length, (idx) {
-                final Color? color = idx < controller.seleccion.length ? controller.seleccion[idx] : null;
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(datosNivel.sequence.length, (idx) {
+                  final Color? color = idx < controller.seleccion.length ? controller.seleccion[idx] : null;
 
-                return GestureDetector(
-                  onTap: () {
-                    if (color != null) {
-                      controller.toggleColor(color);
-                    }
-                  },
-                  child: Container(
-                    width: 65,
-                    height: 65,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: color ?? const Color(0xFF141824),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: color != null ? const Color(0xFFFF9F1C) : const Color(0xFF2C3446),
-                        width: color != null ? 2.5 : 1.5,
+                  return GestureDetector(
+                    onTap: () {
+                      if (color != null) {
+                        controller.toggleColor(color);
+                      }
+                    },
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: color ?? const Color(0xFF141824),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: color != null ? const Color(0xFF8B5A2B) : const Color(0xFF3F4B62),
+                          width: color != null ? 2.0 : 1.5,
+                        ),
                       ),
+                      alignment: Alignment.center,
+                      child: color == null
+                          ? Text(
+                              "${idx + 1}",
+                              style: const TextStyle(color: Colors.white38, fontSize: 15, fontWeight: FontWeight.bold),
+                            )
+                          : const SizedBox.shrink(),
                     ),
-                    alignment: Alignment.center,
-                    child: color == null
-                        ? Text(
-                            "${idx + 1}",
-                            style: const TextStyle(color: Colors.white24, fontSize: 16, fontWeight: FontWeight.bold),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 24),
             // OPCIONES DISPONIBLES
             const Text(
               "PIGMENTOS DESORDENADOS EN LA MESA:",
-              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFFFFE4A3), fontSize: 12, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Wrap(
-              spacing: 16,
-              runSpacing: 16,
+              spacing: 10,
+              runSpacing: 10,
               alignment: WrapAlignment.center,
               children: datosNivel.shuffled.map((color) {
                 final bool seleccionado = controller.seleccion.contains(color);
 
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: seleccionado ? Colors.transparent : Colors.transparent,
-                      width: 3.5,
-                    ),
-                  ),
-                  child: Opacity(
-                    opacity: seleccionado ? 0.35 : 1.0,
-                    child: GameButton(
-                      width: 70,
-                      height: 70,
-                      borderRadius: 18,
-                      backgroundColor: color,
-                      shadowColor: _getShadowColor(color),
-                      onTap: () => controller.toggleColor(color),
+                return Opacity(
+                  opacity: seleccionado ? 0.35 : 1.0,
+                  child: GameButton(
+                    width: 58,
+                    height: 58,
+                    borderRadius: 14,
+                    backgroundColor: color,
+                    shadowColor: _getShadowColor(color),
+                    onTap: () => controller.toggleColor(color),
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Container(
-                        alignment: Alignment.bottomCenter,
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.35),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            "#${color.value.toRadixString(16).substring(2).toUpperCase()}",
-                            style: const TextStyle(color: Colors.white, fontSize: 8, fontFamily: 'monospace'),
-                          ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "#${color.value.toRadixString(16).substring(2).toUpperCase()}",
+                          style: const TextStyle(color: Colors.white, fontSize: 7.5, fontFamily: 'monospace'),
                         ),
                       ),
                     ),
