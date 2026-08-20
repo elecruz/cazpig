@@ -101,25 +101,72 @@ class Nivel1Controller extends BaseLevelController<MixLevelModel> {
       return datosNivel.colorHex;
     }
 
-    // Buscar si produce alguna otra combinación en el catálogo
+    // Buscar si produce alguna otra combinación en el catálogo (Conmutativa A+B == B+A)
     for (final mezcla in LevelGenerator.mezclasBase) {
       final m1 = getPigmentInfo(mezcla["c1"]).color.value;
       final m2 = getPigmentInfo(mezcla["c2"]).color.value;
-      if ((c1Val == m1 && c2Val == m2) || (c1Val == m2 && c2Val == c1Val)) {
+      if ((c1Val == m1 && c2Val == m2) || (c1Val == m2 && c2Val == m1)) {
         nombreColorResultante = mezcla["objective"];
         esCorrecto = false;
         return mezcla["colorHex"];
       }
     }
 
-    nombreColorResultante = "Mezcla inestable";
+    // Regla sustractiva general de fallback conmutativa para cualquier par de pigmentos
+    final int r1 = getPigmentInfo(colorSeleccionado1!).color.value;
+    final int r2 = getPigmentInfo(colorSeleccionado2!).color.value;
+
+    final String fallbackName = _obtenerNombreSustractivo(r1, r2);
+    final Color fallbackColor = _obtenerColorSustractivo(r1, r2);
+
+    nombreColorResultante = fallbackName;
     esCorrecto = false;
+
+    return fallbackColor;
+  }
+
+  bool _coinciden(int a, int b, int val1, int val2) {
+    return (a == val1 && b == val2) || (a == val2 && b == val1);
+  }
+
+  String _obtenerNombreSustractivo(int c1, int c2) {
+    final red = const Color(0xFFE53935).value;
+    final blue = const Color(0xFF1E88E5).value;
+    final yellow = const Color(0xFFFFB300).value;
+    final green = const Color(0xFF43A047).value;
+
+    if (_coinciden(c1, c2, red, yellow)) return "Naranja";
+    if (_coinciden(c1, c2, blue, yellow)) return "Verde Viridián";
+    if (_coinciden(c1, c2, red, blue)) return "Violeta";
+    if (_coinciden(c1, c2, green, yellow)) return "Verde Lima";
+    if (_coinciden(c1, c2, green, blue)) return "Turquesa";
+    if (_coinciden(c1, c2, green, red)) return "Marrón Tierra";
+    if (c1 == Colors.white.value || c2 == Colors.white.value) return "Tono Claro (Pastel)";
+    if (c1 == const Color(0xFF212121).value || c2 == const Color(0xFF212121).value) return "Tono Oscuro (Sombra)";
+
+    return "Mezcla Secundaria";
+  }
+
+  Color _obtenerColorSustractivo(int c1, int c2) {
+    final red = const Color(0xFFE53935).value;
+    final blue = const Color(0xFF1E88E5).value;
+    final yellow = const Color(0xFFFFB300).value;
+    final green = const Color(0xFF43A047).value;
+
+    if (_coinciden(c1, c2, red, yellow)) return const Color(0xFFFB8C00);
+    if (_coinciden(c1, c2, blue, yellow)) return const Color(0xFF43A047);
+    if (_coinciden(c1, c2, red, blue)) return const Color(0xFF8E24AA);
+    if (_coinciden(c1, c2, green, yellow)) return const Color(0xFF7CB342);
+    if (_coinciden(c1, c2, green, blue)) return const Color(0xFF00ACC1);
+    if (_coinciden(c1, c2, green, red)) return const Color(0xFF6D4C41);
 
     return Color.lerp(colorSeleccionado1, colorSeleccionado2, 0.5) ?? const Color(0xFF4E443C);
   }
 
   void seleccionarColor(Color color) {
-    if (comprobado) return;
+    if (comprobado) {
+      comprobado = false;
+    }
 
     if (colorSeleccionado1 == color) {
       colorSeleccionado1 = null;
@@ -147,6 +194,7 @@ class Nivel1Controller extends BaseLevelController<MixLevelModel> {
     colorSeleccionado2 = null;
     nombreColorResultante = "Sin mezcla";
     esCorrecto = false;
+    comprobado = false;
     notifyListeners();
   }
 
