@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../controllers/splash_controller.dart';
 import '../../controllers/user_controller.dart';
-import '../../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'menu_principal_screen.dart';
-import 'registro_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,33 +38,32 @@ class _SplashScreenState extends State<SplashScreen> {
           final user = UserController().currentUser;
           if (!mounted) return;
 
-          if (user.email == 'invitado@correo.com' || user.email.isEmpty) {
+          User? firebaseUser;
+          try {
+            firebaseUser = FirebaseAuth.instance.currentUser;
+          } catch (e) {
+            debugPrint("No se pudo obtener el usuario de Firebase: $e");
+          }
+
+          // Si hay usuario de Firebase O si hay un perfil local guardado (modo offline o iniciado previamente)
+          final tienePerfilGuardado = user.email.isNotEmpty && user.email != 'invitado@correo.com';
+          
+          if (firebaseUser != null || tienePerfilGuardado || user.isOffline) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const RegistroScreen()),
+              MaterialPageRoute(
+                builder: (context) => MenuPrincipalScreen(
+                  correo: firebaseUser?.email ?? user.email,
+                  edad: user.age,
+                ),
+              ),
             );
           } else {
-            final firebaseUser = FirebaseAuth.instance.currentUser;
-
-            if (firebaseUser != null) {
-              // Sesión activa: ir al menú principal
-              final user = UserController().currentUser;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MenuPrincipalScreen(
-                    correo: firebaseUser.email ?? user.email,
-                    edad: user.age,
-                  ),
-                ),
-              );
-            } else {
-              // Sin sesión: ir a login
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            }
+            // Sin sesión ni datos locales: ir a login
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
           }
         },
       );

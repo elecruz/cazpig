@@ -1,4 +1,4 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../controllers/registro_controller.dart';
 import '../../controllers/user_controller.dart';
@@ -38,6 +38,27 @@ class _RegistroScreenState extends State<RegistroScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      if (_isOffline) {
+        final user = _controller.registrarUsuario();
+        UserController().inicializarUsuario(
+          email: user.email,
+          age: user.age,
+          isOffline: true,
+        );
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuPrincipalScreen(
+              correo: user.email,
+              edad: user.age,
+            ),
+          ),
+        );
+        return;
+      }
+
       await _authService.registerWithEmailAndPassword(
         email: _controller.emailController.text,
         password: _passwordController.text,
@@ -46,7 +67,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       UserController().inicializarUsuario(
         email: user.email,
         age: user.age,
-        isOffline: _isOffline,
+        isOffline: false,
       );
 
       if (mounted) {
@@ -71,6 +92,31 @@ class _RegistroScreenState extends State<RegistroScreen> {
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
+      final esErrorRed = e.code == 'network-request-failed';
+      if (esErrorRed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sin red. Iniciando en modo offline local...'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        final user = _controller.registrarUsuario();
+        UserController().inicializarUsuario(
+          email: user.email,
+          age: user.age,
+          isOffline: true,
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuPrincipalScreen(
+              correo: user.email,
+              edad: user.age,
+            ),
+          ),
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_authService.getErrorMessage(e))),
       );

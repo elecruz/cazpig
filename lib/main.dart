@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -7,11 +8,21 @@ import 'src/services/notification_service.dart';
 void main() async { 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicialización defensiva de Firebase
+  // Inicialización defensiva de Firebase y persistencia local para soporte Offline
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 3));
+    ).timeout(const Duration(seconds: 4));
+
+    // Activar persistencia sin conexión de Firestore
+    try {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      debugPrint("Configuración de caché Firestore omitida: $e");
+    }
 
     // Inicializar FCM solo si Firebase encendió correctamente
     try {

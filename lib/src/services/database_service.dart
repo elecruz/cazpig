@@ -62,12 +62,18 @@ class DatabaseService {
     }
   }
 
-  // 2. Obtener los datos del usuario desde Firestore
+  // 2. Obtener los datos del usuario desde Firestore (con fallback a caché local en offline)
   Future<UserModel?> getUserProfile(String uid) async {
     try {
       if (_db == null) return null;
-      DocumentSnapshot doc = await _db!.collection('users').doc(uid).get();
-      if (doc.exists) {
+      DocumentSnapshot doc;
+      try {
+        doc = await _db!.collection('users').doc(uid).get().timeout(const Duration(seconds: 3));
+      } catch (_) {
+        doc = await _db!.collection('users').doc(uid).get(const GetOptions(source: Source.cache));
+      }
+
+      if (doc.exists && doc.data() != null) {
         return _mapToUser(doc.data() as Map<String, dynamic>);
       }
     } catch (e, stack) {
@@ -147,15 +153,25 @@ class DatabaseService {
     }
   }
 
-  // 7. Consulta de ranking (Retorna lista vacía en lugar de crashear si no hay red)
+  // 7. Consulta de ranking (soporta fallback offline)
   Future<List<UserModel>> getTopRanking() async {
     try {
       if (_db == null) return [];
-      QuerySnapshot snapshot = await _db!
-          .collection('users')
-          .orderBy('pigments', descending: true)
-          .limit(20)
-          .get();
+      QuerySnapshot snapshot;
+      try {
+        snapshot = await _db!
+            .collection('users')
+            .orderBy('pigments', descending: true)
+            .limit(20)
+            .get()
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {
+        snapshot = await _db!
+            .collection('users')
+            .orderBy('pigments', descending: true)
+            .limit(20)
+            .get(const GetOptions(source: Source.cache));
+      }
 
       return snapshot.docs.map((doc) {
         return _mapToUser(doc.data() as Map<String, dynamic>);

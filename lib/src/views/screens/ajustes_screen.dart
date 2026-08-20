@@ -77,6 +77,65 @@ class _AjustesScreenState extends State<AjustesScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 24),
+                    ListenableBuilder(
+                      listenable: UserController(),
+                      builder: (context, _) {
+                        final user = UserController().currentUser;
+                        return _buildSettingsCard(
+                          children: [
+                            _buildSwitchTile(
+                              title: 'Modo Offline',
+                              subtitle: user.isOffline
+                                  ? 'Guardando avance únicamente en este dispositivo'
+                                  : 'Sincronizando automáticamente con la nube',
+                              icon: user.isOffline ? Icons.cloud_off_rounded : Icons.cloud_done_rounded,
+                              value: user.isOffline,
+                              onChanged: (value) async {
+                                await UserController().cambiarModoOffline(value);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(value
+                                          ? 'Modo Offline activado: El avance se guardará localmente.'
+                                          : 'Modo Online activado: Se sincronizará con la nube.'),
+                                      backgroundColor: value ? Colors.orange : Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            _buildDivider(),
+                            ListTile(
+                              leading: const Icon(Icons.sync_rounded, color: Colors.cyanAccent),
+                              title: const Text(
+                                'Sincronizar Progreso con la Nube',
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              subtitle: Text(
+                                user.email.isEmpty || user.email == 'invitado@correo.com'
+                                    ? 'Inicia sesión para respaldar tu progreso'
+                                    : 'Subir cambios locales a Firebase',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                              ),
+                              onTap: () async {
+                                final exito = await UserController().sincronizarProgresoOfflineConNube();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(exito
+                                          ? '¡Progreso sincronizado exitosamente con la nube!'
+                                          : 'No se pudo sincronizar. Verifica tu conexión a internet.'),
+                                      backgroundColor: exito ? Colors.green : Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                     const SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,

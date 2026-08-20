@@ -35,6 +35,31 @@ class ProgressHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
 
+                // Indicador flotante de Modo Offline
+                if (user.isOffline)
+                  Positioned(
+                    top: 22,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD97706),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cloud_off_rounded, color: Colors.white, size: 10),
+                          SizedBox(width: 2),
+                          Text(
+                            'OFFLINE',
+                            style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // 2. CAPA DE ICONOS Y TEXTOS CORREGIDA CON BLOQUES FIJOS
                 Positioned.fill(
                   child: Padding(

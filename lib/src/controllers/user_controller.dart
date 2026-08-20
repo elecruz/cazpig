@@ -32,12 +32,44 @@ class UserController extends ChangeNotifier {
     }
   }
 
-  /// Inicializa el usuario (después del login)
+  /// Método público para forzar la sincronización del progreso acumulado localmente con la nube
+  Future<bool> sincronizarProgresoOfflineConNube() async {
+    final uid = currentUser.email.isEmpty || currentUser.email == "invitado@correo.com"
+        ? null
+        : currentUser.email.replaceAll('.', '_');
+
+    if (uid == null) return false;
+
+    try {
+      await _dbService.saveUserProfile(uid, currentUser);
+      print("¡Progreso local de ${currentUser.email} sincronizado con la nube!");
+      return true;
+    } catch (e, stack) {
+      await LoggingService.logException(e, stack, reason: 'Error al sincronizar datos locales con la nube');
+      return false;
+    }
+  }
+
+  /// Cambia el modo offline/online del usuario y guarda la preferencia localmente
+  Future<void> cambiarModoOffline(bool esOffline) async {
+    if (_currentUser != null) {
+      _currentUser = currentUser.copyWith(isOffline: esOffline);
+      await guardarProgresoLocal();
+      if (!esOffline) {
+        await sincronizarProgresoOfflineConNube();
+      }
+      notifyListeners();
+    }
+  }
+
+  /// Inicializa el usuario (después del login o al seleccionar jugar offline)
   void inicializarUsuario({required String email, required String age, required bool isOffline}) {
     _currentUser = UserModel.initial(email: email, age: age, isOffline: isOffline);
     _verificarRachaDiaria();
     guardarProgresoLocal();
-    _sincronizarConFirebase();
+    if (!isOffline) {
+      _sincronizarConFirebase();
+    }
     notifyListeners();
   }
 

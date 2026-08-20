@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart'; // Para detectar kDebugMode
 import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
 import '../../controllers/user_controller.dart';
-import '../../services/logging_service.dart'; // Monitoreo A09
-import 'menu_principal_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import '../../controllers/user_controller.dart';
-import '../../services/auth_service.dart';
+import '../../services/logging_service.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/game_button.dart';
 import 'menu_principal_screen.dart';
@@ -35,6 +29,31 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _jugarSinConexion() async {
+    await UserController().cargarProgresoLocal();
+    final current = UserController().currentUser;
+    if (current.email.isEmpty || current.email == 'invitado@correo.com') {
+      UserController().inicializarUsuario(
+        email: 'invitado@correo.com',
+        age: '0',
+        isOffline: true,
+      );
+    } else {
+      await UserController().cambiarModoOffline(true);
+    }
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MenuPrincipalScreen(
+          correo: UserController().currentUser.email,
+          edad: UserController().currentUser.age,
+        ),
+      ),
+    );
   }
 
   Future<void> _intentarLogin() async {
@@ -88,8 +107,21 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (!mounted) return;
+      
+      final esErrorRed = e.code == 'network-request-failed';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_authService.getErrorMessage(e))),
+        SnackBar(
+          content: Text(esErrorRed
+              ? 'Sin conexión a internet. ¿Deseas jugar en modo offline?'
+              : _authService.getErrorMessage(e)),
+          action: esErrorRed
+              ? SnackBarAction(
+                  label: 'Modo Offline',
+                  onPressed: _jugarSinConexion,
+                  textColor: Colors.cyanAccent,
+                )
+              : null,
+        ),
       );
     } catch (e, stack) {
       await LoggingService.logException(e, stack, reason: 'Error crítico genérico en flujo de Login');
@@ -206,6 +238,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Iniciar Sesión',
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                                 ),
+                        ),
+                        const SizedBox(height: 14),
+                        OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _jugarSinConexion,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.cyanAccent, width: 1.5),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.cloud_off_rounded, color: Colors.cyanAccent),
+                          label: const Text(
+                            'Jugar sin conexión (Modo Offline)',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                          ),
                         ),
                       ],
                     ),
